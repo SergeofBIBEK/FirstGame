@@ -118,7 +118,7 @@
 	    this.addWindow(this._srdMenuInfo);
 
 	    this._statusWindow.x = (Graphics.width / 2) - (this._statusWindow.width / 2);
-		this._statusWindow.y = 0;
+		this._statusWindow.y = ((Graphics.height - this._commandWindow.height) / 2) - (this._statusWindow.height / 2);
 		if(sumCommandPos.trim().toLowerCase() === 'right') {
 			this._commandWindow.x = Graphics.width - this._commandWindow.width;
 			this._srdMenuInfo.x = 0;
@@ -176,6 +176,11 @@
 	    this.changePaintOpacity(actor.isBattleMember());
 	    this.drawActorFace(actor, rect.x + sumX, rect.y + sumY, Window_Base._faceWidth, Window_Base._faceHeight);
 	    this.changePaintOpacity(true);
+        //SergeofBIBEK Edit: HP,MP, Name
+        this.drawActorHp(actor, rect.x + sumX, rect.y + Window_Base._faceHeight - 10, Window_Base._faceWidth / 2);
+        this.drawActorMp(actor, rect.x + sumX + (Window_Base._faceWidth / 2), rect.y + Window_Base._faceHeight - 10, Window_Base._faceWidth / 2);
+        this.drawActorName(actor, rect.x + sumX, rect.y);
+        //End SergeofBIBEK Edit
 	};
 	function Window_SumRndmMenuInfo() {
 	    this.initialize.apply(this, arguments);
