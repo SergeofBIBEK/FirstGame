@@ -33,6 +33,20 @@ Scene_Battle.prototype.onSkillOk = function() {
         }
 };
 
+var SergeofBIBEK_Scene_Battle_OnSkillCancel = Scene_Battle.prototype.onSkillCancel
+Scene_Battle.prototype.onSkillCancel = function() {
+    if(BattleManager._SergeCounter != -1)
+        {
+            BattleManager._SergeCounter = -1;
+            
+            this._skillWindow.hide();
+        }
+    else
+        {
+            SergeofBIBEK_Scene_Battle_OnSkillCancel.call(this);
+        }
+};
+
 /*BattleManager.prototype.SergeofBIBEK_Counter_Setup = function()
 {
     
