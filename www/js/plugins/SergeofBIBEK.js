@@ -3,6 +3,29 @@
  * @author SergeofBIBEK
  */
 
+var SergeofBIBEK_Scene_Battle_selectEnemySelection = Scene_Battle.prototype.selectEnemySelection;
+Scene_Battle.prototype.selectEnemySelection = function() {
+    this._actorCommandWindow.close();
+    SergeofBIBEK_Scene_Battle_selectEnemySelection.call(this);
+};
+
+var SergeofBIBEK_Scene_Battle_onEnemyCancel = Scene_Battle.prototype.onEnemyCancel;
+Scene_Battle.prototype.onEnemyCancel = function() {
+    SergeofBIBEK_Scene_Battle_onEnemyCancel.call(this);
+    this._actorCommandWindow.open();
+};
+
+var SergeofBIBEK_Scene_Battle_selectActorSelection = Scene_Battle.prototype.selectActorSelection;
+Scene_Battle.prototype.selectActorSelection = function() {
+    SergeofBIBEK_Scene_Battle_selectActorSelection.call(this);
+    this._actorCommandWindow.close();
+};
+
+var SergeofBIBEK_Scene_Battle_onActorCancel = Scene_Battle.prototype.onActorCancel;
+Scene_Battle.prototype.onActorCancel = function() {
+    SergeofBIBEK_Scene_Battle_onActorCancel.call(this);
+    this._actorCommandWindow.open();
+};
 
 
 var SergeofBIBEK_BattleManager_InitMembers = BattleManager.initMembers;
