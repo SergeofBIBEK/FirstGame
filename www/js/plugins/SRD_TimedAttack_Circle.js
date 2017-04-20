@@ -398,7 +398,7 @@ SRD.TimedAttackCircle = SRD.TimedAttackCircle || {};
 	    }
 
 	    //Time Limit
-	    console.log(this._timeLimit + "  " + this._frame);
+
 	    if(this._timeLimit && this._frame > this._timeLimit) {
 			this._content.bitmap.clear();
 			this.setPower(0);

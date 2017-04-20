@@ -1,4 +1,4 @@
-﻿/*:
+/*:
 -------------------------------------------------------------------------
 @title Save Title
 @author Hime --> HimeWorks (http://himeworks.com)
@@ -95,7 +95,6 @@ TH.saveTitle = TH.saveTitle || {};
   };
 
   Game_System.prototype.setSaveTitle = function(title, isFormula) { 
-    console.log(isFormula);
     if (isFormula === undefined) {
       isFormula = false;
     }

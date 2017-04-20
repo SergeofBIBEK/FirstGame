@@ -453,8 +453,6 @@ YED.TransferStealStates = {};
             return false;
         }
 
-        console.log(statesId);
-
         this.makeSuccess(target);
 
         for (var i = 0; i < statesId.length; i++) {
