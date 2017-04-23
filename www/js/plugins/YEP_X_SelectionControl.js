@@ -1826,6 +1826,10 @@ Window_VisualSelectAll.prototype.processTouch = function() {
             this._enemySelectWindow.processOk();
                 $gameTemp._firstTouchHappened = false;
           }
+            else
+                {
+                    $gameTemp._firstTouchHappened = false;
+                }
         }
 };
 
