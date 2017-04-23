@@ -3,5 +3,5 @@ null,
 {"id":1,"expanded":false,"name":"Intro - Hospital","order":2,"parentId":2,"scrollX":1109,"scrollY":430.5},
 {"id":2,"expanded":true,"name":"Intro - Prophecy","order":1,"parentId":0,"scrollX":819,"scrollY":437.5},
 {"id":3,"expanded":false,"name":"Intro - Forbidden Lands","order":3,"parentId":2,"scrollX":811,"scrollY":437.5},
-{"id":4,"expanded":false,"name":"Martial Arts Academy","order":4,"parentId":0,"scrollX":7442,"scrollY":5721.5}
+{"id":4,"expanded":false,"name":"Martial Arts Academy","order":4,"parentId":0,"scrollX":7434,"scrollY":5713.5}
 ]

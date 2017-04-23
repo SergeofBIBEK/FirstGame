@@ -1823,8 +1823,8 @@ Window_VisualSelectAll.prototype.processTouch = function() {
     else
         {
             if (inside) {
-            this._enemySelectWindow.processOk();
                 $gameTemp._firstTouchHappened = false;
+            this._enemySelectWindow.processOk();
           }
             else
                 {
