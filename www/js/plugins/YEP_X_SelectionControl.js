@@ -1784,6 +1784,7 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
   var y = this.canvasToLocalY(TouchInput._mouseOverY);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
   if (inside) {
+      $gameTemp._firstTouchHappened = true;
     if (this._isActorSelect) {
       var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
     } else {
@@ -1794,6 +1795,7 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
     $gameTemp._disableMouseOverSelect = true;
   } else {
     $gameTemp._disableMouseOverSelect = false;
+      $gameTemp._firstTouchHappened = false;
   }
 };
 
@@ -1803,21 +1805,30 @@ Window_VisualSelectAll.prototype.processTouch = function() {
   var x = this.canvasToLocalX(TouchInput.x);
   var y = this.canvasToLocalY(TouchInput.y);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
-    if (inside) {
-    if (this._isActorSelect) {
-      var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
-    } else {
-      var index = this._enemySelectWindow._enemies.indexOf('ALL ENEMIES');
-    }
-    if (index !== this._enemySelectWindow.index()) SoundManager.playCursor();
-    this._enemySelectWindow.select(index);
-    $gameTemp._disableMouseOverSelect = true;
-  } else {
-    $gameTemp._disableMouseOverSelect = false;
-  }
-  if (inside) {
-    this._enemySelectWindow.processOk();
-  }
+    if(!$gameTemp._firstTouchHappened)
+        {
+            if (inside) {
+                $gameTemp._firstTouchHappened = true;
+                if (this._isActorSelect) {
+                  var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
+                } else {
+                  var index = this._enemySelectWindow._enemies.indexOf('ALL ENEMIES');
+                }
+                if (index !== this._enemySelectWindow.index()) SoundManager.playCursor();
+                this._enemySelectWindow.select(index);
+                $gameTemp._disableMouseOverSelect = true;
+              } else {
+                $gameTemp._disableMouseOverSelect = false;
+                  $gameTemp._firstTouchHappened = false;
+              }
+        }
+    else
+        {
+            if (inside) {
+                $gameTemp._firstTouchHappened = false;
+            this._enemySelectWindow.processOk();
+          }
+        }
 };
 
 //=============================================================================
