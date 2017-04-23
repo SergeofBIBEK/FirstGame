@@ -17,7 +17,7 @@
  * @help
  *
  * Super Tools Engine
- * Version 1.05
+ * Version 1.15
  * SumRndmDde
  *
  *
@@ -146,7 +146,7 @@ SRD.SuperToolsEngine = SRD.SuperToolsEngine || {};
 SRD.NotetagGetters = SRD.NotetagGetters || [];
 
 var Imported = Imported || {};
-Imported["SumRndmDde Super Tools Engine"] = 1.05;
+Imported["SumRndmDde Super Tools Engine"] = 1.15;
 
 var $dataWindows = {};
 var $dataBasicEX = {};
@@ -199,6 +199,7 @@ _.capFirst = function(value) {
 _.loadNotetags = function() {
 	_.loadBasicData();
 	_.loadNoteData();
+	_.checkPartySystem();
 };
 
 _.loadBasicData = function() {
@@ -252,6 +253,12 @@ _.loadNoteData = function() {
 	});
 };
 
+_.checkPartySystem = function() {
+	if(Imported.YEP_PartySystem && Yanfly.Party.version < 1.12) {
+		alert('Please update YEP_PartySystem to version 1.12 or above!');
+	}
+};
+
 SRD.NotetagGetters.push(_.loadNotetags);
 
 //-----------------------------------------------------------------------------
@@ -300,7 +307,7 @@ DataManager.loadDataFile = function(name, src) {
 			src = oriSrc;
 		}
 	}
-    _.DataManager_loadDataFile.call(this, name, src);
+	_.DataManager_loadDataFile.call(this, name, src);
 };
 
 //-----------------------------------------------------------------------------
@@ -448,6 +455,7 @@ Object.defineProperty(MakerManager, 'colors', {
 });
 
 MakerManager.initManager = function() {
+	this._listIndex = 0;
 	this.setupGameWindow();
 	this.updateTheme();
 };
@@ -561,7 +569,7 @@ MakerManager.setupGameWindow = function() {
 		win.on('focus', function() {
 			if(MakerManager.window) {
 				MakerManager.window.setAlwaysOnTop(true);
-				MakerManager.window.show();
+				//MakerManager.window.show();
 				MakerManager.window.restore();
 				MakerManager.window.setAlwaysOnTop(false);
 			}
@@ -604,6 +612,7 @@ MakerManager.updateStyle = function() {
 
 MakerManager.setLauncherPage = function() {
 	this.mainHTML = this.topBar(0) + this.getLauncherHtml();
+	this.refreshEverything();
 };
 
 MakerManager.setPlaytesterPage = function() {
@@ -625,27 +634,103 @@ MakerManager.topBar = function(index) {
 };
 
 MakerManager.getLauncherHtml = function() {
-	return `<p><table>
-				<tr>
-					<th>Launch Button</th>
-					<th>Description</th>
-				</tr>
-				${this.getLauncherTable()}
-			</table></p>`;
+	return `<p>
+				<table id="MainTable">
+				</table>
+				<div id="PageControl" style="text-align: center; float: center; width: 100%; position: fixed; bottom: 0; padding-bottom: 30px;">
+				</div>
+			</p>`;
+};
+
+MakerManager.refreshTable = function() {
+	const table = this._document.getElementById('MainTable');
+	table.innerHTML = `<tr>
+							<th>Launch Button</th>
+							<th>Description</th>
+						</tr>
+						${this.getLauncherTable()}`;
+};
+
+MakerManager.refreshPages = function() {
+	const pages = this._document.getElementById('PageControl');
+	pages.innerHTML = this.getPageControl();
+};
+
+MakerManager.refreshEverything = function() {
+	this.refreshTable();
+	this.refreshPages();
 };
 
 MakerManager.getLauncherTable = function() {
-	return `${this.generateLauncherRow("Database EX", "A tool that adds, edits, and upgrades various MV Database inputs.", "DataManagerEX.setupWindowHtml()", "#f41f1f")}
-			${this.generateLauncherRow("Debug Tool", "A tool containing various features for testing one's game.", "DebugManager.setupWindowHtml()", "#1f8af4")}
-			${this.generateLauncherRow("Menu Editor", "A tool that allows developers to edit the window setups for scenes.", "WindowManager.setupWindowHtml()", "#8a1ff4")}`;
+	let result = '';
+	const buttons = this.getLauncherButtons();
+	const count = this.getLauncherTableCount();
+	const max = Math.min((this._listIndex + 1) * 5, count);
+	for(let i = this._listIndex * 5; i < max; i++) {
+		result += buttons[i];
+	}
+	return result;
+};
+
+MakerManager.getLauncherButtons = function() {
+	if(this._buttons === undefined) this._buttons = this.getLauncherButtonsRaw();
+	return this._buttons;
+};
+
+MakerManager.getLauncherButtonsRaw = function() {
+	return [
+				`${this.generateLauncherRow("Database EX", "A tool that adds, edits, and upgrades various MV Database inputs.", "DataManagerEX.setupWindowHtml()", "#f41f1f")}`,
+				`${this.generateLauncherRow("Debug Tool", "A tool containing various features for testing one's game.", "DebugManager.setupWindowHtml()", "#1f8af4")}`,
+				`${this.generateLauncherRow("Menu Editor", "A tool that allows developers to edit the window setups for scenes.", "WindowManager.setupWindowHtml()", "#8a1ff4")}`
+			];
+};
+
+MakerManager.getLauncherTableCount = function() {
+	return this.getLauncherButtons().length;
+};
+
+MakerManager.getLauncherTableMax = function() {
+	const count = this.getLauncherTableCount();
+	return Math.ceil(count / 5);
 };
 
 MakerManager.generateLauncherRow = function(name, description, method, color) {
 	color = color || "#000000";
 	return `<tr>
 				<td><button style="background-color: ${color};" id="LaunchButton" onclick="${method}"><span>${name}</span></button></td>
-				<td>${description}</td>
+				<td id="LaunchDescription ${name}">${description}</td>
 			</tr>`;
+};
+
+MakerManager.getPageControl = function() {
+	const count = this.getLauncherTableCount();
+	if(count < 6) return '';
+	const max = this.getLauncherTableMax();
+	return `<div style="transform: translateY(-9px); float: right; width: 34%; text-align:center;">
+				<button class="button" onclick="MakerManager.incrementPage()" />\u21D2</button>
+			</div>
+			<b>Page: (${this._listIndex + 1}/${max})</b>
+			<div style="transform: translateY(-9px); float: left; width: 34%; text-align:center;">
+					<button class="button" onclick="MakerManager.decrementPage()" />\u21D0</button>
+			</div>`;
+};
+
+MakerManager.incrementPage = function() {
+	const max = this.getLauncherTableMax();
+	this._listIndex++;
+	if(this._listIndex + 1 > max) {
+		this._listIndex = 0;
+	}
+	this.refreshEverything();
+};
+
+MakerManager.decrementPage = function() {
+	const max = this.getLauncherTableMax();
+	this._listIndex--;
+	if(this._listIndex < 0) {
+		this._listIndex = max - 1;
+	}
+	this.refreshEverything();
 };
 
 MakerManager.getOptionsHtml = function() {
@@ -706,7 +791,8 @@ MakerManager.getOptionsList = function(selected) {
 			<option value="4" ${selected[4]}>Shadow the Hedgehog</option>
 			<option value="5" ${selected[5]}>Dank Meme</option>
 			<option value="6" ${selected[6]}>High Contrast Orange</option>
-			<option value="7" ${selected[7]}>Absolute Randomness</option>`;
+			<option value="7" ${selected[7]}>Fullmetal Alchemist</option>
+			<option value="8" ${selected[8]}>Absolute Randomness</option>`;
 };
 
 MakerManager.getMakerTheme = function() {
@@ -737,7 +823,8 @@ MakerManager.updateTheme = function() {
 				'#888888', // Input Border
 				'#ffffff', // Select Background
 				'#888888', // Select Border
-				'#ff9900'  // Input Highlight
+				'#ff9900', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 1:
@@ -759,7 +846,8 @@ MakerManager.updateTheme = function() {
 				'#888888', // Input Border
 				'#444444', // Select Background
 				'#888888', // Select Border
-				'#0099ff'  // Input Highlight
+				'#0099ff', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 2:
@@ -781,7 +869,8 @@ MakerManager.updateTheme = function() {
 				'#888888', // Input Border
 				'#ffffff', // Select Background
 				'#888888', // Select Border
-				'#0099ff'  // Input Highlight
+				'#0099ff', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 3:
@@ -803,7 +892,8 @@ MakerManager.updateTheme = function() {
 				'#888888', // Input Border
 				'#ffffff', // Select Background
 				'#888888', // Select Border
-				'#ff00ff'  // Input Highlight
+				'#ff00ff', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 4:
@@ -825,7 +915,8 @@ MakerManager.updateTheme = function() {
 				'#888888', // Input Border
 				'#444444', // Select Background
 				'#888888', // Select Border
-				'#ff0000'  // Input Highlight
+				'#ff0000', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 5:
@@ -847,7 +938,8 @@ MakerManager.updateTheme = function() {
 				'#888877', // Input Border
 				'#444433', // Select Background
 				'#888877', // Select Border
-				'#ffff00'  // Input Highlight
+				'#ffff00', // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 6:
@@ -858,8 +950,8 @@ MakerManager.updateTheme = function() {
 				'#805300', // Background Color
 				'#ffd280', // Border Color
 				'#9c7d5e', // Background Color 2
-				'#9c7d5e',    // Top Menu On-Mouse
-				'#9c7d5e',    // Top Menu No Select
+				'#9c7d5e', // Top Menu On-Mouse
+				'#9c7d5e', // Top Menu No Select
 				'#67ccff', // Table Border
 				'#ffa600', // Off-grid Color
 				'#cc8500', // Grid Hover Color
@@ -869,10 +961,36 @@ MakerManager.updateTheme = function() {
 				'#8888aa', // Input Border
 				'#444466', // Select Background
 				'#8888aa', // Select Border
-				'orange'   // Input Highlight
+				'orange',  // Input Highlight
+				'#666'	   // Top Menu Text Color
 			];
 			break;
 		case 7:
+			this._colors = [
+				'#fff',    // Text Color
+				'#aeae4c', // Base Color
+				'#8e8e3e', // Base Color 2
+				'#444',    // Background Color
+				'#303030', // Border Color
+				'#4d4d4d', // Background Color 2
+				'#666',    // Top Menu On-Mouse
+				'#555',    // Top Menu No Select
+				'#666',    // Table Border
+				'#4d4d4d', // Off-grid Color
+				'#666',    // Grid Hover Color
+				'#333',    // Button Shadow
+				'#000',    // Pushed Button Shadow
+				'#666666', // Input Background
+				'#aaaaaa', // Input Border
+				'#6666666', // Select Background
+				'#aaaaaa', // Select Border
+				'#ae4c4c', // Input Highlight
+				'#888',	   // Top Menu Text Color
+				'#ae4c4c', // Button Color 1
+				'#8e3e3e'  // Button Color 2
+			];
+			break;
+		case 8:
 			this._colors = [(Math.random() > 0.5) ? "#000000" : "#ffffff"];
 			for(let i = 0; i < 17; i++) {
 				this._colors.push(`rgba(${Math.randomInt(255)}, ${Math.randomInt(255)}, ${Math.randomInt(255)}, 255)`)
@@ -924,6 +1042,7 @@ MakerManager.getStyle = function() {
 	const topMenuHighlight = this._colors[6];
 	const topMenuNoSelect = this._colors[7];
 	const tableBorder = this._colors[8];
+	const scrollBack = this._colors[10];
 	const buttonShadow = this._colors[11];
 	const pushedButtonShadow = this._colors[12];
 	const inputBackground = this._colors[13];
@@ -931,7 +1050,14 @@ MakerManager.getStyle = function() {
 	const selectBackground = this._colors[15];
 	const selectBorder = this._colors[16];
 	const inputHighlight = this._colors[17];
-	return `table {
+	const topMenuText = this._colors[18];
+	const buttonColor = this._colors[19] || baseColor;
+	const buttonColor2 = this._colors[20] || hoverColor;
+	return `a:link {
+				color: #33ccff;
+			}
+
+			table {
 				border-collapse: collapse;
 				width: 100%;
 			}
@@ -943,7 +1069,7 @@ MakerManager.getStyle = function() {
 			th, td {
 				padding: 16px;
 				border-bottom: 1px solid ${tableBorder};
-				background-color: ${trueBackgroundColor}
+				background-color: ${trueBackgroundColor};
 			}
 
 			td {
@@ -963,16 +1089,16 @@ MakerManager.getStyle = function() {
 				text-decoration: none;
 				outline: none;
 				color: #fff;
-				background-color: ${baseColor};
+				background-color: ${buttonColor};
 				border: none;
 				border-radius: 15px;
 				box-shadow: 0 4px ${buttonShadow};
 			}
 
-			button:hover {background-color: ${hoverColor}}
+			button:hover {background-color: ${buttonColor2}}
 
 			button:active {
-				background-color: ${hoverColor};
+				background-color: ${buttonColor2};
 				box-shadow: 0 2px ${pushedButtonShadow};
 				transform: translateY(2px);
 			}
@@ -993,7 +1119,7 @@ MakerManager.getStyle = function() {
 
 			li a {
 				display: block;
-				color: #666;
+				color: ${topMenuText};
 				text-align: center;
 				padding: 14px 16px;
 				text-decoration: none;
@@ -1013,7 +1139,7 @@ MakerManager.getStyle = function() {
 				border-radius: 4px;
 				border: none;
 				color: #FFFFFF;
-				font-size: 22px;
+				font-size: 18px;
 				padding: 14px;
 				width: 200px;
 				height: 50px;
@@ -1057,10 +1183,6 @@ MakerManager.getStyle = function() {
 				text-decoration: none;
 			}
 
-			.dropdown:hover .dropbtn {
-				background-color: red;
-			}
-
 			li.dropdown {
 				display: inline-block;
 			}
@@ -1068,21 +1190,24 @@ MakerManager.getStyle = function() {
 			.dropdown-content {
 				display: none;
 				position: absolute;
-				background-color: #f9f9f9;
+				background-color: ${topMenuNoSelect};
 				min-width: 160px;
 				box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
 				z-index: 1;
 			}
 
 			.dropdown-content a {
-				color: black;
+				color: ${topMenuText};
+				background-color: ${topMenuNoSelect};
 				padding: 12px 16px;
 				text-decoration: none;
 				display: block;
 				text-align: left;
 			}
 
-			.dropdown-content a:hover {background-color: #f1f1f1}
+			.dropdown-content a:hover {
+				background-color: ${topMenuHighlight};
+			}
 
 			.dropdown:hover .dropdown-content {
 				display: block;
@@ -1106,6 +1231,24 @@ MakerManager.getStyle = function() {
 			input[type=text]:focus, textarea:focus, select:focus {
 				box-shadow: 0 0 5px ${inputHighlight};
 				border: 1px solid ${inputHighlight};
+			}
+
+			#scrollStuff::-webkit-scrollbar {
+				width: 1em;
+			}
+			 
+			#scrollStuff::-webkit-scrollbar-track {
+				background-color: ${scrollBack};
+			}
+			 
+			#scrollStuff::-webkit-scrollbar-thumb {
+				background-color: ${trueBackgroundColor};
+				outline: 1px solid slategrey;
+				outline-offset: -1px;
+			}
+
+			#scrollStuff::-webkit-scrollbar-corner {
+				background-color: ${scrollBack};
 			}`;
 };
 
@@ -1257,7 +1400,7 @@ DataManagerEX.topBar = function(index) {
 	const allInfo = this.getCustomInfo();
 	for(let i = 0; i < allInfo.length; i++) {
 		const info = allInfo[i];
-		result += `<a onclick="DataManagerEX.setCustomPage('${info[0]}', ${info[1]})">${info[0]}</a>\n`;
+		result += `<a id="Dropdown" onclick="DataManagerEX.setCustomPage('${info[0]}', ${info[1]})">${info[0]}</a>\n`;
 	}
 	return `<ul style="cursor:pointer">
 				<li><a ${active[0]} onclick="DataManagerEX.setBasicPage()">Basic Editor</a></li>
@@ -1650,6 +1793,16 @@ DebugManager.givePartyArmors = function() {
 	SoundManager.playUseItem();
 };
 
+DebugManager.givePartyMembers = function() {
+	const id = MakerManager.document.getElementById('allActorId').value;
+	$gameParty.addActor(parseInt(id));
+};
+
+DebugManager.takePartyMembers = function() {
+	const id = MakerManager.document.getElementById('allActorId').value;
+	$gameParty.removeActor(parseInt(id));
+};
+
 /*
  * Super Restart Functions
  */
@@ -1666,7 +1819,9 @@ DebugManager.restartGame = function() {
 			return;
 		}
 	}
-	DataManager.saveGame(999);
+	if(DataManager.saveGame(999)) {
+		StorageManager.cleanBackup(999);
+	}
 	this.restartGameForRealizies();
 };
 
@@ -1715,7 +1870,9 @@ DebugManager.isSetToReopen = function() {
 
 DebugManager.quickSave = function() {
 	const id = DataManager.maxSavefiles() + 1;
-	DataManager.saveGame(id);
+	if(DataManager.saveGame(id)) {
+		StorageManager.cleanBackup(id);
+	}
 };
 
 DebugManager.quickLoad = function() {
@@ -1778,17 +1935,22 @@ DebugManager.setGiverPage = function() {
 	MakerManager.mainHTML = this.topBar(1) + this.getGiverHtml();
 };
 
+DebugManager.setGiver2Page = function() {
+	this.mode = 'give2';
+	MakerManager.mainHTML = this.topBar(2) + this.getGiver2Html();
+};
+
 DebugManager.setSwitchPage = function() {
 	this.mode = 'switch';
 	this._listIndex = 0;
-	MakerManager.mainHTML = this.topBar(2) + this.getSwitchHtml();
+	MakerManager.mainHTML = this.topBar(3) + this.getSwitchHtml();
 	this.refreshSwitchTables();
 };
 
 DebugManager.setVariablePage = function() {
 	this.mode = 'variable';
 	this._listIndex = 0;
-	MakerManager.mainHTML = this.topBar(3) + this.getVariableHtml();
+	MakerManager.mainHTML = this.topBar(4) + this.getVariableHtml();
 	this.refreshVariableTables();
 };
 
@@ -1797,9 +1959,10 @@ DebugManager.topBar = function(index) {
 	active[index] = 'class="active"';
 	return `<ul style="cursor:pointer">
 				<li><a ${active[0]} onclick="DebugManager.setBasicPage()">Basic</a></li>
-				<li><a ${active[1]} onclick="DebugManager.setGiverPage()">Givers</a></li>
-				<li><a ${active[2]} onclick="DebugManager.setSwitchPage()">Switches</a></li>
-				<li><a ${active[3]} onclick="DebugManager.setVariablePage()">Variables</a></li>
+				<li><a ${active[1]} onclick="DebugManager.setGiverPage()">Givers I</a></li>
+				<li><a ${active[2]} onclick="DebugManager.setGiver2Page()">Givers II</a></li>
+				<li><a ${active[3]} onclick="DebugManager.setSwitchPage()">Switches</a></li>
+				<li><a ${active[4]} onclick="DebugManager.setVariablePage()">Variables</a></li>
 				<li style="float:right"><a onclick="DebugManager.returnToMaker()">Return to Main</a></li>
 			</ul>`;
 };
@@ -1832,6 +1995,17 @@ DebugManager.getActorList = function() {
 		const info = $gameParty.members()[i];
 		if(!info) continue;
 		result += '<option value="' + info.actorId() + '">' + info.name() + '</option>';
+	}
+	result += `</select>`;
+	return result;
+};
+
+DebugManager.getEntireActorList = function() {
+	let result = `<select id="allActorId" style="width:100%">`;
+	for(let i = 0; i < $dataActors.length; i++) {
+		const info = $dataActors[i];
+		if(!info) continue;
+		result += '<option value="' + info.id + '"> (' + _.pad(info.id) + ') ' + info.name + '</option>';
 	}
 	result += `</select>`;
 	return result;
@@ -1986,6 +2160,25 @@ DebugManager.getGiverHtml = function() {
 					</td>
 					<td style="width: 60%;">
 						Allows the party to immediately obtain a specified amount of any armor.
+					</td>
+				</tr>
+			</table></p>`;
+};
+
+DebugManager.getGiver2Html = function() {
+	return `<p><table>
+				<tr>
+					<th>Control</th>
+					<th>Description</th>
+				</tr>
+				<tr>
+					<td style="text-align: center;">
+						${this.getEntireActorList()}<hr style="height:0%; visibility:hidden;" />
+						<button class="button" onclick="DebugManager.givePartyMembers()" />Add</button>&nbsp;&nbsp;&nbsp;&nbsp;
+						<button class="button" onclick="DebugManager.takePartyMembers()" />Remove</button>
+					</td>
+					<td style="width: 60%;">
+						Allows developers to control the actors within the current party.
 					</td>
 				</tr>
 			</table></p>`;
@@ -2176,7 +2369,7 @@ WindowManager.setupWindowHtml = function() {
 };
 
 WindowManager.setupMakerHtml = function() {
-	MakerManager.mainHTML = this.topBar(0) + this.getMakerHtml();
+	MakerManager.mainHTML = this.topBar('main') + this.getMakerHtml();
 	this.onWindowChange();
 };
 
@@ -2195,12 +2388,18 @@ WindowManager.refreshProperties = function() {
 };
 
 WindowManager.topBar = function(type) {
-	const active = [''];
+	const active = {};
 	active[type] = 'class="active"';
 	return `<ul style="cursor:pointer">
-				<li><a ${active[0]} onclick="WindowManager.setupMakerHtml()">Maker</a></li>
+				<li><a ${active['main'] || ''} onclick="WindowManager.setupMakerHtml()">Maker</a></li>
+				${this.topBarCustoms(active)}
+				<li><a onclick="WindowManager.resetScene()">Reset Menu</a></li>
 				<li style="float:right"><a onclick="WindowManager.returnToMaker()">Return to Main</a></li>
 			</ul>`;
+};
+
+WindowManager.topBarCustoms = function(active) {
+	return '';
 };
 
 WindowManager.getMakerHtml = function() {
@@ -2209,8 +2408,8 @@ WindowManager.getMakerHtml = function() {
 		this._focusWindow = this._scene.getEditWindow(windowSelect.value);
 	}
 	return `<p>
-				<p style="text-align:center"><br><br>
-					<b>Target Window:</b><br><br>
+				<p style="text-align:center"><br>
+					<b>Target Window:</b><br>
 					${this.getWindowList()}<br><br>
 				</p>
 				<table id='MainTable'>
@@ -2243,6 +2442,10 @@ WindowManager.getTableHtml = function() {
 	if(!$dataWindows[scene][win]) $dataWindows[scene][win] = {};
 	const data = $dataWindows[scene][win];
 	let result = `<tr>
+					<td style="text-align: center;">Opacity:</td>
+					<td style="width: 50%;text-align: center;"><input type="text" id="Opacity" value="${data.opacity || this._focusWindow.opacity}"></td>
+				</tr>
+				<tr>
 					<td style="text-align: center;">Width:</td>
 					<td style="width: 50%;text-align: center;"><input type="text" id="Width" value="${data.width || this._focusWindow.width}"></td>
 				</tr>`;
@@ -2265,6 +2468,11 @@ WindowManager.getTableHtml = function() {
 				</tr>`;
 	}
 	if(this._focusWindow._ste_isCommand) {
+		result += `<tr>
+					<td style="text-align: center;">Line Height:</td>
+					<td style="width: 50%;text-align: center;"><input type="text" id="lineHeight" value="${data.lineHeight || this._focusWindow.lineHeight()}"></td>
+				</tr>`;
+
 		const selected = {left: '', center: '', right: ''};
 		selected[data.align || this._focusWindow.itemTextAlign()] = 'selected';
 		result += `<tr>
@@ -2297,6 +2505,14 @@ WindowManager.onWindowChange = function() {
 	const name = MakerManager.document.getElementById('WindowSelect').value;
 	this.refreshTable();
 	this._scene.setEditWindow(name);
+};
+
+WindowManager.resetScene = function() {
+	if(confirm('Would you like to reset all changes? The game will need to restart.')) {
+		$dataWindows[this._scene.constructor.name] = undefined;
+		this.save();
+		DebugManager.restartGame();
+	}
 };
 
 WindowManager.initManager();
@@ -2441,11 +2657,17 @@ Scene_Base.prototype.refreshEditWindowProperties = function() {
 	const data = $dataWindows[this.constructor.name][this._editWindowName];
 	const doc = MakerManager.document;
 	const win = this._editWindow;
+	const opacity = doc.getElementById('Opacity');
 	const width = doc.getElementById('Width');
 	const height = doc.getElementById('Height');
 	const rows = doc.getElementById('Rows');
 	const cols = doc.getElementById('Cols');
+	const lineHeight = doc.getElementById('lineHeight');
 	const align = doc.getElementById('Text Align');
+	if(opacity) {
+		data.opacity = opacity.value;
+		win.opacity = eval(opacity.value);
+	}
 	if(width) {
 		data.width = width.value;
 		win.width = eval(width.value);
@@ -2459,9 +2681,6 @@ Scene_Base.prototype.refreshEditWindowProperties = function() {
 		win.numVisibleRows = function() {
 			return eval(rows.value);
 		};
-		if(win._ste_isCommand) {
-			win.height = win.windowHeight();
-		}
 	}
 	if(cols) {
 		data.cols = cols.value;
@@ -2469,11 +2688,20 @@ Scene_Base.prototype.refreshEditWindowProperties = function() {
 			return eval(cols.value);
 		};
 	}
+	if(lineHeight) {
+		data.lineHeight = lineHeight.value;
+		win.lineHeight = function() {
+			return eval(lineHeight.value);
+		};
+	}
 	if(align) {
 		data.align = align.value;
 		win.itemTextAlign = function() {
 			return align.value;
 		};
+	}
+	if(win._ste_isCommand) {
+		win.height = win.windowHeight();
 	}
 	if(win.createContents) win.createContents();
 	if(win.refresh) {
@@ -2500,25 +2728,31 @@ Scene_Base.prototype.initCustomWindowPositions = function() {
 			const info = $dataWindows[this.constructor.name][win.constructor.name];
 			if(info.x !== undefined) win.x = info.x;
 			if(info.y !== undefined) win.y = info.y;
+			if(info.opacity !== undefined) win.opacity = eval(info.opacity);
 			if(info.width !== undefined) win.width = eval(info.width);
 			if(info.height !== undefined) win.height = eval(info.height);
 			if(info.rows !== undefined) {
 				win.numVisibleRows = function() {
 					return eval(info.rows);
 				};
-				if(win._ste_isCommand) {
-					win.height = win.windowHeight();
-				}
 			}
 			if(info.cols !== undefined) {
 				win.maxCols = function() {
 					return eval(info.cols);
 				};
 			}
+			if(info.lineHeight !== undefined) {
+				win.lineHeight = function() {
+					return eval(info.lineHeight);
+				};
+			}
 			if(info.align !== undefined) {
 				win.itemTextAlign = function() {
 					return info.align;
 				};
+			}
+			if(win._ste_isCommand) {
+				win.height = win.windowHeight();
 			}
 			if(win.createContents) win.createContents();
 			if(win.refresh) {
@@ -2589,12 +2823,12 @@ Scene_Boot.prototype.openMaker = function() {
 
 _.Game_Player_isDebugThrough = Game_Player.prototype.isDebugThrough;
 Game_Player.prototype.isDebugThrough = function() {
-    return _.Game_Player_isDebugThrough.apply(this, arguments) || DebugManager.disableCollisions;
+	return _.Game_Player_isDebugThrough.apply(this, arguments) || DebugManager.disableCollisions;
 };
 
 _.Game_Player_canEncounter = Game_Player.prototype.canEncounter;
 Game_Player.prototype.canEncounter = function() {
-    return _.Game_Player_canEncounter.apply(this, arguments) && !DebugManager.disableEncounters;
+	return _.Game_Player_canEncounter.apply(this, arguments) && !DebugManager.disableEncounters;
 };
 
 //-----------------------------------------------------------------------------
