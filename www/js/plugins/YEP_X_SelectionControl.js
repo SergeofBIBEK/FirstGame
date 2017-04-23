@@ -1816,8 +1816,8 @@ Window_VisualSelectAll.prototype.processTouch = function() {
                 this._enemySelectWindow.select(index);
                 $gameTemp._disableMouseOverSelect = true;
               } else {
-                $gameTemp._disableMouseOverSelect = false;
                   $gameTemp._firstTouchHappened = false;
+                $gameTemp._disableMouseOverSelect = false;
               }
         }
     else
