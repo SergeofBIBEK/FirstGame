@@ -3254,6 +3254,7 @@ TouchInput._onRightButtonDown = function(event) {
     var y = Graphics.pageToCanvasY(event.pageY);
     if (Graphics.isInsideCanvas(x, y)) {
         this._onCancel(x, y);
+        event.preventDefault();
     }
 };
 

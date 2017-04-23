@@ -1800,9 +1800,21 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
 Window_VisualSelectAll.prototype.processTouch = function() {
   if (!this.visible) return;
   if (!TouchInput.isTriggered()) return;
-  var x = this.canvasToLocalX(TouchInput._x);
-  var y = this.canvasToLocalY(TouchInput._y);
+  var x = this.canvasToLocalX(TouchInput.x);
+  var y = this.canvasToLocalY(TouchInput.y);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
+    if (inside) {
+    if (this._isActorSelect) {
+      var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
+    } else {
+      var index = this._enemySelectWindow._enemies.indexOf('ALL ENEMIES');
+    }
+    if (index !== this._enemySelectWindow.index()) SoundManager.playCursor();
+    this._enemySelectWindow.select(index);
+    $gameTemp._disableMouseOverSelect = true;
+  } else {
+    $gameTemp._disableMouseOverSelect = false;
+  }
   if (inside) {
     this._enemySelectWindow.processOk();
   }
