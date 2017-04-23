@@ -1803,34 +1803,10 @@ Window_VisualSelectAll.prototype.processTouch = function() {
   var x = this.canvasToLocalX(TouchInput.x);
   var y = this.canvasToLocalY(TouchInput.y);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
-    if(!$gameTemp._firstTouchHappened)
-        {
-            if (inside) {
-                $gameTemp._firstTouchHappened = true;
-                if (this._isActorSelect) {
-                  var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
-                } else {
-                  var index = this._enemySelectWindow._enemies.indexOf('ALL ENEMIES');
-                }
-                if (index !== this._enemySelectWindow.index()) SoundManager.playCursor();
-                this._enemySelectWindow.select(index);
-                $gameTemp._disableMouseOverSelect = true;
-              } else {
-                  $gameTemp._firstTouchHappened = false;
-                $gameTemp._disableMouseOverSelect = false;
-              }
-        }
-    else
-        {
-            if (inside) {
-                $gameTemp._firstTouchHappened = false;
+    if (inside) {
+        Window_VisualSelectAll.prototype.processMouseOver.call(this);
             this._enemySelectWindow.processOk();
           }
-            else
-                {
-                    $gameTemp._firstTouchHappened = false;
-                }
-        }
 };
 
 //=============================================================================
