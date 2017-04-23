@@ -1800,8 +1800,8 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
 Window_VisualSelectAll.prototype.processTouch = function() {
   if (!this.visible) return;
   if (!TouchInput.isTriggered()) return;
-  var x = this.canvasToLocalX(TouchInput._mouseOverX);
-  var y = this.canvasToLocalY(TouchInput._mouseOverY);
+  var x = this.canvasToLocalX(TouchInput._x);
+  var y = this.canvasToLocalY(TouchInput._y);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
   if (inside) {
     this._enemySelectWindow.processOk();
