@@ -1784,7 +1784,6 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
   var y = this.canvasToLocalY(TouchInput._mouseOverY);
   var inside = x >= 0 && y >= 0 && x < this.width && y < this.height;
   if (inside) {
-      $gameTemp._firstTouchHappened = true;
     if (this._isActorSelect) {
       var index = this._enemySelectWindow._enemies.indexOf('ALL ALLIES');
     } else {
