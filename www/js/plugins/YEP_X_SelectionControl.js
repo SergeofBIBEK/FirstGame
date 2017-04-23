@@ -1795,7 +1795,6 @@ Window_VisualSelectAll.prototype.processMouseOver = function() {
     $gameTemp._disableMouseOverSelect = true;
   } else {
     $gameTemp._disableMouseOverSelect = false;
-      $gameTemp._firstTouchHappened = false;
   }
 };
 
@@ -1825,8 +1824,8 @@ Window_VisualSelectAll.prototype.processTouch = function() {
     else
         {
             if (inside) {
-                $gameTemp._firstTouchHappened = false;
             this._enemySelectWindow.processOk();
+                $gameTemp._firstTouchHappened = false;
           }
         }
 };
