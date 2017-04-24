@@ -3,6 +3,8 @@
  * @author SergeofBIBEK
  */
 
+var SergeofBIBEK_Version = 1.1;
+
 var SergeofBIBEK_Scene_Battle_selectEnemySelection = Scene_Battle.prototype.selectEnemySelection;
 Scene_Battle.prototype.selectEnemySelection = function() {
     this._actorCommandWindow.close();
