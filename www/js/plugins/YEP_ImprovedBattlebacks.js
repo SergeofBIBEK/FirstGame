@@ -8,11 +8,11 @@ Imported.YEP_ImprovedBattlebacks = true;
 
 var Yanfly = Yanfly || {};
 Yanfly.IBB = Yanfly.IBB || {};
-Yanfly.IBB.version = 1.00;
+Yanfly.IBB.version = 1.01;
 
 //=============================================================================
  /*:
- * @plugindesc v1.00 Changes how RPG Maker MV handles battlebacks.
+ * @plugindesc v1.01 Changes how RPG Maker MV handles battlebacks.
  * Battlebacks are now more flexible with what they can do.
  * @author Yanfly Engine Plugins
  *
@@ -215,6 +215,17 @@ Yanfly.IBB.version = 1.00;
  *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  * Usage Example: battleback 1 reset scroll speed
  *=============================================================================
+ *
+ * ============================================================================
+ * Changelog
+ * ============================================================================
+ *
+ * Version 1.01:
+ * - Fixed a bug that wasn't returning the proper sequence checks with action
+ * sequences.
+ *
+ * Version 1.00:
+ * - Finished Plugin!
  */
 //=============================================================================
 
@@ -332,8 +343,9 @@ BattleManager.processActionSequence = function(actionName, actionArgs) {
     }
     line += str.trim();
     this.alterBattleback(line);
+    return false;
   } else {
-    Yanfly.IBB.BattleManager_pAS.call(this, actionName, actionArgs);
+    return Yanfly.IBB.BattleManager_pAS.call(this, actionName, actionArgs);
   }
 };
 
