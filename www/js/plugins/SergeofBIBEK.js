@@ -29,7 +29,6 @@ Scene_Battle.prototype.onActorCancel = function() {
     this._actorCommandWindow.open();
 };
 
-
 var SergeofBIBEK_BattleManager_InitMembers = BattleManager.initMembers;
 BattleManager.initMembers = function() {
     SergeofBIBEK_BattleManager_InitMembers.call(this);
@@ -72,16 +71,6 @@ Scene_Battle.prototype.onSkillCancel = function() {
         }
 };
 
-/*BattleManager.prototype.SergeofBIBEK_Counter_Setup = function()
-{
-    
-    Scene_Battle._skillWindow.setActor(this._SergeUser);
-    Scene_Battle._skillWindow.setStypeId(2);
-    Scene_Battle._skillWindow.refresh();
-    Scene_Battle._skillWindow.show();
-    Scene_Battle._skillWindow.activate();
-}*/
-
 BattleManager.SergeofBIBEK_Counter = function()
 {
     
@@ -89,10 +78,6 @@ BattleManager.SergeofBIBEK_Counter = function()
     var action = new Game_Action(this._SergeUser);
         
     action.setSkill(this._SergeSkill.id);
-    
-   /* alert(this._SergeCounter);
-    
-    action.setTarget(this._SergeCounter);*/
     
     var targets = []
     targets.push(this._SergeTarget);
@@ -102,8 +87,6 @@ BattleManager.SergeofBIBEK_Counter = function()
     
     this._phase = 'action';
     this._action = action;
-    /*this._targets = [];
-    this._targets.push(this._SergeTarget);*/
     this._phase = 'phaseChange';
     this._phaseSteps = ['setup', 'whole', 'target', 'follow', 'finish'];
     this._returnPhase = '';
