@@ -16,10 +16,10 @@
  * Action Sequences can get very lengthy and difficult to manage.
  * Now you can enter some action sequences into a skill to call on later.
  * This will make action sequences potentially a lot shorter for each skill.
- * Addtionally you can update the action sequences in one place and it 
+ * Addtionally you can update the action sequences in one place and it
  * suddenly applies to all skills that use it!
  *
- *  
+ *
  * ==========================================================================
  *  How to Set Up
  * ==========================================================================
@@ -34,7 +34,7 @@
  * X is the number/ID of the Proxy. You will use this to call the sequence.
  * Between the notetags enter any action sequence.
  *
- * For Example on Skill 5: 
+ * For Example on Skill 5:
  *
  *     <Action Sequence Proxy: 1>
  *     motion attack: user
@@ -93,7 +93,7 @@
  *
  * Now the action sequence can be even shorter.
  *
- *     <Ttarget Action>
+ *     <Target Action>
  *     proxy 2 from 5
  *     proxy 1 from 5
  *     show battle hud
@@ -105,39 +105,62 @@
  * All on one skill, or across multiple skills.
  */
 
+//Alias of Yanfly's BattleManager.processActionSequence function.
 var SergeofBIBEK_ASProxy_BattleManager_processActionSequence =
     BattleManager.processActionSequence;
-BattleManager.processActionSequence = function(actionName, actionArgs) 
+BattleManager.processActionSequence = function(actionName, actionArgs)
 {
   // Action Sequence Proxy
-  if (actionName.match(/PROXY[ ](\d*)[ ]FROM[ ](\d*)/i)) 
+  if (actionName.match(/PROXY[ ](\d*)[ ]FROM[ ](\d*)/i))
   {
-      return this.SergeofBIBEKAddProxyCommands(actionName, RegExp.$1, RegExp.$2);
+      //Calls my Original Function passing in the variables.
+      return this.SergeofBIBEKAddProxyCommands(RegExp.$1, RegExp.$2);
   }
-    
+
+    //Call the original
   return SergeofBIBEK_ASProxy_BattleManager_processActionSequence.call(this,
     actionName, actionArgs);
 };
 
-BattleManager.SergeofBIBEKAddProxyCommands = function(actionName, SergeProxyID, SergeSkillID)
+/**
+* Original function that grabs the AS commands and queues them up.
+* @function BattleManager.SergeofBIBEKAddProxyCommands
+* @param {String} SergeProxyID - a number that represents ID of the proxy notetag
+* @param {String} SergeSkillID - a number that represents the ID of the skill where the proxy is stored
+* @return {bool} true or false that Yanfly's processActionSequence is waiting for.
+* @this BattleManager
+* @author SergeofBIBEK <SergeofBIBEK@gmail.com>
+* @todo Handle error cases.
+* @todo Optimize
+*/
+BattleManager.SergeofBIBEKAddProxyCommands = function(SergeProxyID, SergeSkillID)
 {
-    var SergeRegExStart = new RegExp("<\\s*Action\\s*Sequence\\s*Proxy\\s*:\\s*" + SergeProxyID + "\\s*>", "i"); 
+    //Regex matching the starting notetag plus the number the user provided.
+    var SergeRegExStart = new RegExp("<\\s*Action\\s*Sequence\\s*Proxy\\s*:\\s*" + SergeProxyID + "\\s*>", "i");
+    //Regex matching the end notetag
     var SergeRegExEnd = new RegExp("<\\s*\/\\s*Action\\s*Sequence\\s*Proxy\\s*>", "i");
+    //Each line of the Skill's notetag separated into an array.
     var SergeNotetagData = $dataSkills[parseInt(SergeSkillID)].note.split(/[\r\n]+/);
-    
+
+    //Boolean to set once the starting notetag has been found.
     var SergeStart = false;
+    //Temp array to store action sequences in.
     var SergeActionSequenceArray = [];
-    
+
+    //For each line in the skill's notetag
     for (var i = 0; i < SergeNotetagData.length; i++)
         {
+            //check if we are inside the correct notetag, if not then do nothing.
             if (SergeStart)
                 {
+                    //check if this is the end notetag, if so then break. If not, then store that line.
                     if (SergeNotetagData[i].match(SergeRegExEnd))
                         {
                             break;
                         }
                     else
                         {
+                            //store line in the temp array after converting it to Yanfly's format.
                             SergeActionSequenceArray.push(this.SergeofBIBEKConvertSequenceLine(SergeNotetagData[i]));
                         }
                 }
@@ -146,13 +169,18 @@ BattleManager.SergeofBIBEKAddProxyCommands = function(actionName, SergeProxyID, 
                     SergeStart = true;
                 }
         }
+    //Take everything out of the array and add (unshift) it into the current action list queue.
+    //  Note that you have to put these in backwards (pop) so that they will come out in the right order.
     while (SergeActionSequenceArray.length > 0)
         {
             this._actionList.unshift(SergeActionSequenceArray.pop());
         }
     return true;
-}
+};
 
+
+//Very slightly modified from Yanfly's BattleManager.ConvertSequenceLine function.
+//  Now it just returns the result instead of using it. (This functionality should be separated in the first place.)
 BattleManager.SergeofBIBEKConvertSequenceLine = function(line)
 {
     var SergeofBIBEKSeqType6 =
@@ -171,7 +199,7 @@ BattleManager.SergeofBIBEKConvertSequenceLine = function(line)
       /[ ]*(.*)/i;
     var SergeofBIBEKSeqType;
     var seqArgs;
-    
+
   if (line.match(SergeofBIBEKSeqType6)) {
     SergeofBIBEKSeqType = RegExp.$1;
     seqArgs =
@@ -198,6 +226,6 @@ BattleManager.SergeofBIBEKConvertSequenceLine = function(line)
     return;
   }
   var array = [SergeofBIBEKSeqType, seqArgs];
-    
+
     return array;
 };
