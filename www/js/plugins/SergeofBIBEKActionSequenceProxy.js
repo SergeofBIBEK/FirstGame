@@ -237,9 +237,13 @@ if(Imported.YEP_BattleEngineCore)
         };
         
     }
-else
+else if(Utils.isOptionValid('test') && Utils.isNwjs())
     {
         var message = "Yanfly's YEP_BattleEngineCore is not installed or installed incorrectly. Make sure it is above SergeofBIBEK's Action Sequence Proxy.";
         alert(message);
         throw new Error(message);
+    }
+else
+    {
+        throw new Error("Action Sequence Proxy Error: Missing Requirement 'YEP_BEC'");
     }
