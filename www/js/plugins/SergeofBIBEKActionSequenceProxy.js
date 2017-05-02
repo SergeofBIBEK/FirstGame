@@ -105,127 +105,141 @@
  * All on one skill, or across multiple skills.
  */
 
-//Alias of Yanfly's BattleManager.processActionSequence function.
-var SergeofBIBEK_ASProxy_BattleManager_processActionSequence =
-    BattleManager.processActionSequence;
-BattleManager.processActionSequence = function(actionName, actionArgs)
-{
-  // Action Sequence Proxy
-  if (actionName.match(/PROXY[ ](\d*)[ ]FROM[ ](\d*)/i))
-  {
-      //Calls my Original Function passing in the variables.
-      return this.SergeofBIBEKAddProxyCommands(RegExp.$1, RegExp.$2);
-  }
+var Imported = Imported || {};
+Imported["SergeofBIBEK Action Sequence Proxy"] = 1.00;
 
-    //Call the original
-  return SergeofBIBEK_ASProxy_BattleManager_processActionSequence.call(this,
-    actionName, actionArgs);
-};
+if(Imported.YEP_BattleEngineCore)
+    {
 
-/**
-* Original function that grabs the AS commands and queues them up.
-* @function BattleManager.SergeofBIBEKAddProxyCommands
-* @param {String} SergeProxyID - a number that represents ID of the proxy notetag
-* @param {String} SergeSkillID - a number that represents the ID of the skill where the proxy is stored
-* @return {bool} true or false that Yanfly's processActionSequence is waiting for.
-* @this BattleManager
-* @author SergeofBIBEK <SergeofBIBEK@gmail.com>
-* @todo Handle error cases.
-* @todo Optimize
-*/
-BattleManager.SergeofBIBEKAddProxyCommands = function(SergeProxyID, SergeSkillID)
-{
-    //Regex matching the starting notetag plus the number the user provided.
-    var SergeRegExStart = new RegExp("<\\s*Action\\s*Sequence\\s*Proxy\\s*:\\s*" + SergeProxyID + "\\s*>", "i");
-    //Regex matching the end notetag
-    var SergeRegExEnd = new RegExp("<\\s*\/\\s*Action\\s*Sequence\\s*Proxy\\s*>", "i");
-    //Each line of the Skill's notetag separated into an array.
-    var SergeNotetagData = $dataSkills[parseInt(SergeSkillID)].note.split(/[\r\n]+/);
-
-    //Boolean to set once the starting notetag has been found.
-    var SergeStart = false;
-    //Temp array to store action sequences in.
-    var SergeActionSequenceArray = [];
-
-    //For each line in the skill's notetag
-    for (var i = 0; i < SergeNotetagData.length; i++)
+        //Alias of Yanfly's BattleManager.processActionSequence function.
+        var SergeofBIBEK_ASProxy_BattleManager_processActionSequence =
+            BattleManager.processActionSequence;
+        BattleManager.processActionSequence = function(actionName, actionArgs)
         {
-            //check if we are inside the correct notetag, if not then do nothing.
-            if (SergeStart)
+          // Action Sequence Proxy
+          if (actionName.match(/PROXY[ ](\d*)[ ]FROM[ ](\d*)/i))
+          {
+              //Calls my Original Function passing in the variables.
+              return this.SergeofBIBEKAddProxyCommands(RegExp.$1, RegExp.$2);
+          }
+
+            //Call the original
+          return SergeofBIBEK_ASProxy_BattleManager_processActionSequence.call(this,
+            actionName, actionArgs);
+        };
+
+        /**
+        * Original function that grabs the AS commands and queues them up.
+        * @function BattleManager.SergeofBIBEKAddProxyCommands
+        * @param {String} SergeProxyID - a number that represents ID of the proxy notetag
+        * @param {String} SergeSkillID - a number that represents the ID of the skill where the proxy is stored
+        * @return {bool} true or false that Yanfly's processActionSequence is waiting for.
+        * @this BattleManager
+        * @author SergeofBIBEK <SergeofBIBEK@gmail.com>
+        * @todo Handle error cases.
+        * @todo Optimize
+        */
+        BattleManager.SergeofBIBEKAddProxyCommands = function(SergeProxyID, SergeSkillID)
+        {
+            //Regex matching the starting notetag plus the number the user provided.
+            var SergeRegExStart = new RegExp("<\\s*Action\\s*Sequence\\s*Proxy\\s*:\\s*" + SergeProxyID + "\\s*>", "i");
+            //Regex matching the end notetag
+            var SergeRegExEnd = new RegExp("<\\s*\/\\s*Action\\s*Sequence\\s*Proxy\\s*>", "i");
+            //Each line of the Skill's notetag separated into an array.
+            var SergeNotetagData = $dataSkills[parseInt(SergeSkillID)].note.split(/[\r\n]+/);
+
+            //Boolean to set once the starting notetag has been found.
+            var SergeStart = false;
+            //Temp array to store action sequences in.
+            var SergeActionSequenceArray = [];
+
+            //For each line in the skill's notetag
+            for (var i = 0; i < SergeNotetagData.length; i++)
                 {
-                    //check if this is the end notetag, if so then break. If not, then store that line.
-                    if (SergeNotetagData[i].match(SergeRegExEnd))
+                    //check if we are inside the correct notetag, if not then do nothing.
+                    if (SergeStart)
                         {
-                            break;
+                            //check if this is the end notetag, if so then break. If not, then store that line.
+                            if (SergeNotetagData[i].match(SergeRegExEnd))
+                                {
+                                    break;
+                                }
+                            else
+                                {
+                                    //store line in the temp array after converting it to Yanfly's format.
+                                    SergeActionSequenceArray.push(this.SergeofBIBEKConvertSequenceLine(SergeNotetagData[i]));
+                                }
                         }
-                    else
+                    else if (SergeNotetagData[i].match(SergeRegExStart))
                         {
-                            //store line in the temp array after converting it to Yanfly's format.
-                            SergeActionSequenceArray.push(this.SergeofBIBEKConvertSequenceLine(SergeNotetagData[i]));
+                            SergeStart = true;
                         }
                 }
-            else if (SergeNotetagData[i].match(SergeRegExStart))
+            //Take everything out of the array and add (unshift) it into the current action list queue.
+            //  Note that you have to put these in backwards (pop) so that they will come out in the right order.
+            while (SergeActionSequenceArray.length > 0)
                 {
-                    SergeStart = true;
+                    this._actionList.unshift(SergeActionSequenceArray.pop());
                 }
-        }
-    //Take everything out of the array and add (unshift) it into the current action list queue.
-    //  Note that you have to put these in backwards (pop) so that they will come out in the right order.
-    while (SergeActionSequenceArray.length > 0)
+            return true;
+        };
+
+
+        //Very slightly modified from Yanfly's BattleManager.ConvertSequenceLine function.
+        //  Now it just returns the result instead of using it. (This functionality should be separated in the first place.)
+        BattleManager.SergeofBIBEKConvertSequenceLine = function(line)
         {
-            this._actionList.unshift(SergeActionSequenceArray.pop());
-        }
-    return true;
-};
+            var SergeofBIBEKSeqType6 =
+              /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
+            var SergeofBIBEKSeqType5 =
+              /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
+            var SergeofBIBEKSeqType4 =
+              /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
+            var SergeofBIBEKSeqType3 =
+              /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*)/i;
+            var SergeofBIBEKSeqType2 =
+              /[ ]*(.*):[ ](.*),[ ](.*)/i;
+            var SergeofBIBEKSeqType1 =
+              /[ ]*(.*):[ ](.*)/i;
+            var SergeofBIBEKSeqType0 =
+              /[ ]*(.*)/i;
+            var SergeofBIBEKSeqType;
+            var seqArgs;
 
+          if (line.match(SergeofBIBEKSeqType6)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs =
+              [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7];
+          } else if (line.match(SergeofBIBEKSeqType5)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5, RegExp.$6];
+          } else if (line.match(SergeofBIBEKSeqType4)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5];
+          } else if (line.match(SergeofBIBEKSeqType3)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4];
+          } else if (line.match(SergeofBIBEKSeqType2)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [RegExp.$2, RegExp.$3];
+          } else if (line.match(SergeofBIBEKSeqType1)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [RegExp.$2];
+          } else if (line.match(SergeofBIBEKSeqType0)) {
+            SergeofBIBEKSeqType = RegExp.$1;
+            seqArgs = [];
+          } else {
+            return;
+          }
+          var array = [SergeofBIBEKSeqType, seqArgs];
 
-//Very slightly modified from Yanfly's BattleManager.ConvertSequenceLine function.
-//  Now it just returns the result instead of using it. (This functionality should be separated in the first place.)
-BattleManager.SergeofBIBEKConvertSequenceLine = function(line)
-{
-    var SergeofBIBEKSeqType6 =
-      /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
-    var SergeofBIBEKSeqType5 =
-      /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
-    var SergeofBIBEKSeqType4 =
-      /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*),[ ](.*)/i;
-    var SergeofBIBEKSeqType3 =
-      /[ ]*(.*):[ ](.*),[ ](.*),[ ](.*)/i;
-    var SergeofBIBEKSeqType2 =
-      /[ ]*(.*):[ ](.*),[ ](.*)/i;
-    var SergeofBIBEKSeqType1 =
-      /[ ]*(.*):[ ](.*)/i;
-    var SergeofBIBEKSeqType0 =
-      /[ ]*(.*)/i;
-    var SergeofBIBEKSeqType;
-    var seqArgs;
-
-  if (line.match(SergeofBIBEKSeqType6)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs =
-      [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5, RegExp.$6, RegExp.$7];
-  } else if (line.match(SergeofBIBEKSeqType5)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5, RegExp.$6];
-  } else if (line.match(SergeofBIBEKSeqType4)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4, RegExp.$5];
-  } else if (line.match(SergeofBIBEKSeqType3)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [RegExp.$2, RegExp.$3, RegExp.$4];
-  } else if (line.match(SergeofBIBEKSeqType2)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [RegExp.$2, RegExp.$3];
-  } else if (line.match(SergeofBIBEKSeqType1)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [RegExp.$2];
-  } else if (line.match(SergeofBIBEKSeqType0)) {
-    SergeofBIBEKSeqType = RegExp.$1;
-    seqArgs = [];
-  } else {
-    return;
-  }
-  var array = [SergeofBIBEKSeqType, seqArgs];
-
-    return array;
-};
+            return array;
+        };
+        
+    }
+else
+    {
+        var message = "Yanfly's YEP_BattleEngineCore is not installed or installed incorrectly. Make sure it is above SergeofBIBEK's Action Sequence Proxy.";
+        alert(message);
+        throw new Error(message);
+    }
